@@ -1,4 +1,4 @@
-import { AuthChain, EthAddress } from '@dcl/schemas'
+import { AuthChain } from '@dcl/schemas'
 import { AppComponents, WebSocket } from '../types'
 import { Authenticator } from '@dcl/crypto'
 import { wsAsAsyncChannel } from './ws-as-async-channel'
@@ -29,7 +29,7 @@ export async function handleSocketLinearProtocol(
       return
     }
 
-    let packet = await channel.yield(1000, 'Timed out waiting for signed challenge response')
+    const packet = await channel.yield(1000, 'Timed out waiting for signed challenge response')
 
     if (!packet.message || packet.message.$case !== 'signedChallenge') {
       throw new Error('Invalid protocol. signedChallenge packet missed')
