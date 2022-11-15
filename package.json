@@ -1,5 +1,5 @@
 {
-  "name": "ws-room-service",
+  "name": "messaging-service",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node --trace-warnings --abort-on-uncaught-exception --unhandled-rejections=strict dist/index.js",

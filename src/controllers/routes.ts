@@ -102,5 +102,6 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
       },
       close: (_ws) => {
         logger.log('WS closed')
+      }
     })
 }
