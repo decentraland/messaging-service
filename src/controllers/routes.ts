@@ -71,20 +71,23 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
             switch (message.$case) {
               case 'publishRequest': {
                 const {
-                  publishRequest: { topic, payload }
+                  publishRequest: { topics, payload }
                 } = message
 
-                const subscriptionMessage = craftMessage({
-                  message: {
-                    $case: 'subscriptionMessage',
-                    subscriptionMessage: {
-                      sender: ws.address!,
-                      topic: topic,
-                      body: payload
+                for (const topic of topics) {
+                  const subscriptionMessage = craftMessage({
+                    message: {
+                      $case: 'subscriptionMessage',
+                      subscriptionMessage: {
+                        sender: ws.address!,
+                        topic: topic,
+                        body: payload
+                      }
                     }
-                  }
-                })
-                app.publish(topic, subscriptionMessage, true)
+                  })
+
+                  app.publish(topic, subscriptionMessage, true)
+                }
                 break
               }
               case 'subscribeRequest': {
