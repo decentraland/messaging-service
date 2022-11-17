@@ -29,7 +29,7 @@ export async function handleSocketLinearProtocol(
       return
     }
 
-    const packet = await channel.yield(1000, 'Timed out waiting for signed challenge response')
+    const packet = await channel.yield(10 * 1000, 'Timed out waiting for signed challenge response')
 
     if (!packet.message || packet.message.$case !== 'signedChallenge') {
       throw new Error('Invalid protocol. signedChallenge packet missed')
