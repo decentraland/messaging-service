@@ -7,6 +7,7 @@ import { AppComponents } from './types'
 import { metricDeclarations } from './metrics'
 import { createWsConnectorComponent } from './adapters/ws-connector'
 import { observeBuildInfo } from './logic/build-info'
+import { createNatsComponent } from '@well-known-components/nats-component'
 
 const DEFAULT_ETH_NETWORK = 'goerli'
 
@@ -25,6 +26,7 @@ export async function initComponents(): Promise<AppComponents> {
     { fetch: fetch.fetch }
   )
 
+  const nats = await createNatsComponent({ config, logs })
   await observeBuildInfo({ config, metrics })
   return {
     config,
@@ -32,6 +34,7 @@ export async function initComponents(): Promise<AppComponents> {
     fetch,
     metrics,
     wsConnector,
-    ethereumProvider
+    ethereumProvider,
+    nats
   }
 }

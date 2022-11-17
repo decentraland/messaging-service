@@ -3,14 +3,44 @@ import * as uWS from 'uWebSockets.js'
 import { GlobalContext, WebSocket, Stage } from '../types'
 import { handleSocketLinearProtocol } from '../logic/handle-linear-protocol'
 import { craftMessage } from '../logic/craft-message'
-import { ClientMessage } from '../proto/messaging.gen'
+import { ClientMessage, HeartbeatMessage } from '../proto/messaging.gen'
+import { NatsMsg } from '@well-known-components/nats-component/dist/types'
+
+// the message topics for this service are prefixed to prevent
+// users "hacking" the NATS messages
+export const saltedPrefix = 'client-proto.'
+export const peerPrefix = `${saltedPrefix}peer.`
 
 export async function setupRouter({ app, components }: GlobalContext): Promise<void> {
-  const { logs, metrics, config } = components
+  const { logs, metrics, config, nats } = components
   const logger = logs.getLogger('messaging')
 
   const commitHash = await config.getString('COMMIT_HASH')
   const status = JSON.stringify({ commitHash })
+
+  function relayToSubscriptors(err: Error | null, message: NatsMsg) {
+    if (err) {
+      logger.error(err)
+      return
+    }
+
+    const topic = message.subject.substring(saltedPrefix.length)
+    const subscriptionMessage = craftMessage({
+      message: {
+        $case: 'subscriptionMessage',
+        subscriptionMessage: {
+          sender: '',
+          topic: topic,
+          body: message.data
+        }
+      }
+    })
+
+    app.publish(topic, subscriptionMessage, true)
+  }
+  nats.subscribe(`${saltedPrefix}*.island_changed`, relayToSubscriptors)
+  nats.subscribe(`${saltedPrefix}island.*.peer_join`, relayToSubscriptors)
+  nats.subscribe(`${saltedPrefix}island.*.peer_left`, relayToSubscriptors)
 
   app
     .get('/status', async (res) => {
@@ -69,6 +99,12 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
               return
             }
             switch (message.$case) {
+              case 'heartbeat': {
+                const realTopic = `${peerPrefix}${ws.address!}.heartbeat`
+                // TODO: use writer
+                nats.publish(realTopic, HeartbeatMessage.encode(message.heartbeat).finish())
+                break
+              }
               case 'publishRequest': {
                 const {
                   publishRequest: { topics, payload }

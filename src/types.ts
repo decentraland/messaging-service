@@ -10,6 +10,7 @@ import { metricDeclarations } from './metrics'
 import { IWebSocketConnectorComponent } from './adapters/ws-connector'
 import * as uWS from 'uWebSockets.js'
 import { Emitter } from 'mitt'
+import { INatsComponent } from '@well-known-components/nats-component/dist/types'
 
 export type GlobalContext = {
   app: uWS.TemplatedApp
@@ -24,6 +25,7 @@ export type BaseComponents = {
   metrics: IMetricsComponent<keyof typeof metricDeclarations>
   wsConnector: IWebSocketConnectorComponent
   ethereumProvider: HTTPProvider
+  nats: INatsComponent
 }
 
 // components used in runtime

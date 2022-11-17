@@ -6,6 +6,7 @@ src/proto/messaging.gen.ts: node_modules/@dcl/protocol/proto/decentraland/kernel
 		--ts_proto_opt=fileSuffix=.gen \
 		--ts_proto_out="$(PWD)/src/proto" \
 		-I="$(PWD)/node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/" \
+		-I="$(PWD)/node_modules/@dcl/protocol/proto/" \
 	"$(PWD)/node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/messaging.proto"
 
 build: src/proto/messaging.gen.ts
