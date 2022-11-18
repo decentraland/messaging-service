@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@dcl/crypto": "^3.2.1",
-    "@dcl/protocol": "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-3496058245.commit-e646587.tgz",
+    "@dcl/protocol": "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-3499518326.commit-232947c.tgz",
     "@dcl/schemas": "^5.18.1",
     "@well-known-components/env-config-provider": "^1.2.0",
     "@well-known-components/http-server": "^1.1.4",

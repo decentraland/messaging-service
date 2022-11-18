@@ -70,6 +70,7 @@ export type WebSocketReader = Pick<uWS.WebSocket, 'end' | 'close'> & Emitter<WsE
 export type WebSocket = Pick<uWS.WebSocket, 'subscribe' | 'unsubscribe'> &
   WebSocketReader & {
     stage: Stage
+    alias: number
     address?: string
 
     // NOTE(hugo): I prefer to override this ones to make isBinary not default

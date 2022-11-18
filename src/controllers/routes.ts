@@ -3,8 +3,14 @@ import * as uWS from 'uWebSockets.js'
 import { GlobalContext, WebSocket, Stage } from '../types'
 import { handleSocketLinearProtocol } from '../logic/handle-linear-protocol'
 import { craftMessage } from '../logic/craft-message'
-import { ClientMessage } from '../proto/messaging.gen'
+import { ClientMessage, IslandChangedMessage, JoinIslandMessage, LeftIslandMessage } from '../proto/messaging.gen'
 import { NatsMsg } from '@well-known-components/nats-component/dist/types'
+import {
+  ArchipelagoIslandChangedMessage,
+  ArchipelagoJoinIslandMessage,
+  ArchipelagoLeftIslandMessage
+} from '../proto/archipelago.gen'
+import { Position } from '../proto/decentraland/common/vectors.gen'
 
 // the message topics for this service are prefixed to prevent
 // users "hacking" the NATS messages
@@ -18,29 +24,92 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
   const commitHash = await config.getString('COMMIT_HASH')
   const status = JSON.stringify({ commitHash })
 
-  function relayToSubscriptors(err: Error | null, message: NatsMsg) {
-    if (err) {
-      logger.error(err)
-      return
-    }
+  let connectionIndex = 0
+  const addressToAlias = new Map<string, number>()
 
-    const topic = message.subject.substring(saltedPrefix.length)
+  function relayToSubscriptors(subject: string, payload: Uint8Array) {
+    const topic = subject.substring(saltedPrefix.length)
     const subscriptionMessage = craftMessage({
       message: {
         $case: 'subscriptionMessage',
         subscriptionMessage: {
-          sender: '',
+          sender: 0,
           topic: topic,
-          body: message.data
+          body: payload
         }
       }
     })
 
     app.publish(topic, subscriptionMessage, true)
   }
-  nats.subscribe(`${saltedPrefix}*.island_changed`, relayToSubscriptors)
-  nats.subscribe(`${saltedPrefix}island.*.peer_join`, relayToSubscriptors)
-  nats.subscribe(`${saltedPrefix}island.*.peer_left`, relayToSubscriptors)
+  nats.subscribe(`${saltedPrefix}*.island_changed`, (err: Error | null, message: NatsMsg) => {
+    if (err) {
+      logger.error(err)
+      return
+    }
+
+    const archipelagoIslandChange = ArchipelagoIslandChangedMessage.decode(message.data)
+    const { islandId, connStr, fromIslandId } = archipelagoIslandChange
+
+    const peers: { [key: number]: Position } = {}
+    for (const [address, p] of Object.entries(archipelagoIslandChange.peers)) {
+      const alias = addressToAlias.get(address)
+      if (alias) {
+        peers[alias] = p
+      }
+    }
+
+    const islandChange = IslandChangedMessage.encode({
+      islandId,
+      connStr,
+      fromIslandId,
+      peers
+    }).finish()
+
+    relayToSubscriptors(message.subject, islandChange)
+  })
+  nats.subscribe(`${saltedPrefix}island.*.peer_join`, (err: Error | null, message: NatsMsg) => {
+    if (err) {
+      logger.error(err)
+      return
+    }
+
+    const { islandId, peerId } = ArchipelagoJoinIslandMessage.decode(message.data)
+
+    const alias = addressToAlias.get(peerId)
+    if (!alias) {
+      return
+    }
+
+    relayToSubscriptors(
+      message.subject,
+      JoinIslandMessage.encode({
+        islandId,
+        peerId: alias
+      }).finish()
+    )
+  })
+  nats.subscribe(`${saltedPrefix}island.*.peer_left`, (err: Error | null, message: NatsMsg) => {
+    if (err) {
+      logger.error(err)
+      return
+    }
+
+    const { islandId, peerId } = ArchipelagoLeftIslandMessage.decode(message.data)
+
+    const alias = addressToAlias.get(peerId)
+    if (!alias) {
+      return
+    }
+
+    relayToSubscriptors(
+      message.subject,
+      LeftIslandMessage.encode({
+        islandId,
+        peerId: alias
+      }).finish()
+    )
+  })
 
   app
     .get('/status', async (res) => {
@@ -68,11 +137,13 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
       },
       open: (_ws) => {
         const ws = _ws as any as WebSocket
+        ws.alias = connectionIndex++
         ws.stage = Stage.LINEAR
         handleSocketLinearProtocol(components, ws)
           .then(() => {
             ws.stage = Stage.READY
             nats.publish(`peer.${ws.address!}.connect`)
+            addressToAlias.set(ws.address!, ws.alias)
           })
           .catch((err: any) => {
             logger.error(err)
@@ -115,7 +186,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
                     message: {
                       $case: 'subscriptionMessage',
                       subscriptionMessage: {
-                        sender: ws.address!,
+                        sender: ws.alias,
                         topic: topic,
                         body: payload
                       }
@@ -143,6 +214,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
         logger.log('WS closed')
         const ws = _ws as any as WebSocket
         if (ws.address) {
+          addressToAlias.delete(ws.address)
           components.nats.publish(`peer.${ws.address}.disconnect`)
         }
       }

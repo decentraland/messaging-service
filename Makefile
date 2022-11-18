@@ -1,4 +1,4 @@
-src/proto/messaging.gen.ts: node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/messaging.proto
+build-proto: node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/messaging.proto
 	mkdir -p src/proto
 	node_modules/.bin/protoc \
 		--plugin=./node_modules/.bin/protoc-gen-ts_proto \
@@ -7,9 +7,10 @@ src/proto/messaging.gen.ts: node_modules/@dcl/protocol/proto/decentraland/kernel
 		--ts_proto_out="$(PWD)/src/proto" \
 		-I="$(PWD)/node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/" \
 		-I="$(PWD)/node_modules/@dcl/protocol/proto/" \
-	"$(PWD)/node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/messaging.proto"
+	"$(PWD)/node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/messaging.proto" \
+	"$(PWD)/node_modules/@dcl/protocol/proto/decentraland/kernel/comms/v3/archipelago.proto"
 
-build: src/proto/messaging.gen.ts
+build: build-proto
 	@rm -rf dist || true
 	@mkdir -p dist
 	@./node_modules/.bin/tsc -p tsconfig.json
