@@ -3,7 +3,7 @@ import * as uWS from 'uWebSockets.js'
 import { GlobalContext, WebSocket, Stage } from '../types'
 import { handleSocketLinearProtocol } from '../logic/handle-linear-protocol'
 import { craftMessage } from '../logic/craft-message'
-import { ClientMessage, HeartbeatMessage } from '../proto/messaging.gen'
+import { ClientMessage } from '../proto/messaging.gen'
 import { NatsMsg } from '@well-known-components/nats-component/dist/types'
 
 // the message topics for this service are prefixed to prevent
@@ -72,6 +72,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
         handleSocketLinearProtocol(components, ws)
           .then(() => {
             ws.stage = Stage.READY
+            nats.publish(`peer.${ws.address!}.connect`)
           })
           .catch((err: any) => {
             logger.error(err)
@@ -101,8 +102,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
             switch (message.$case) {
               case 'heartbeat': {
                 const realTopic = `${peerPrefix}${ws.address!}.heartbeat`
-                // TODO: use writer
-                nats.publish(realTopic, HeartbeatMessage.encode(message.heartbeat).finish())
+                nats.publish(realTopic, Buffer.from(message.heartbeat))
                 break
               }
               case 'publishRequest': {
@@ -141,6 +141,10 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
       },
       close: (_ws) => {
         logger.log('WS closed')
+        const ws = _ws as any as WebSocket
+        if (ws.address) {
+          components.nats.publish(`peer.${ws.address}.disconnect`)
+        }
       }
     })
 }
