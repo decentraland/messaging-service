@@ -121,20 +121,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
     })
     .ws('/service', {
       compression: uWS.DISABLED,
-      upgrade: (res, req, context) => {
-        res.upgrade(
-          {
-            // NOTE: this is user data
-            url: req.getUrl(),
-            ...mitt()
-          },
-          /* Spell these correctly */
-          req.getHeader('sec-websocket-key'),
-          req.getHeader('sec-websocket-protocol'),
-          req.getHeader('sec-websocket-extensions'),
-          context
-        )
-      },
+      idleTimeout: 0,
       open: (_ws) => {
         components.metrics.increment('dcl_messaging_connections', {})
         const ws = _ws as any as WebSocket
@@ -152,6 +139,9 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
               ws.close()
             } catch {}
           })
+      },
+      drain: (ws) => {
+        components.metrics.observe('dcl_messaging_ws_buffed_amount', { alias: ws.alias }, ws.getBufferedAmount())
       },
       message: (_ws, data, isBinary) => {
         if (!isBinary) {
