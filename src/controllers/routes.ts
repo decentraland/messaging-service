@@ -136,6 +136,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
         )
       },
       open: (_ws) => {
+        components.metrics.increment('dcl_messaging_connections', {})
         const ws = _ws as any as WebSocket
         ws.alias = connectionIndex++
         ws.stage = Stage.LINEAR
@@ -159,6 +160,9 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
         }
 
         const ws = _ws as any as WebSocket
+
+        metrics.increment('dcl_messaging_in_messages', {})
+        metrics.increment('dcl_messaging_in_bytes', {}, data.byteLength)
 
         switch (ws.stage) {
           case Stage.LINEAR: {
@@ -193,6 +197,9 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
                     }
                   })
 
+                  const n = app.numSubscribers(topic)
+                  metrics.increment('dcl_messaging_out_messages', {}, n)
+                  metrics.increment('dcl_messaging_out_bytes', {}, subscriptionMessage.byteLength * n)
                   app.publish(topic, subscriptionMessage, true)
                 }
                 break
@@ -212,6 +219,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
       },
       close: (_ws) => {
         logger.log('WS closed')
+        components.metrics.decrement('dcl_messaging_connections', {})
         const ws = _ws as any as WebSocket
         if (ws.address) {
           addressToAlias.delete(ws.address)
