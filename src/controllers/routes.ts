@@ -24,7 +24,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
   const commitHash = await config.getString('COMMIT_HASH')
   const status = JSON.stringify({ commitHash })
 
-  let connectionIndex = 0
+  let connectionIndex = 1
   const addressToAlias = new Map<string, number>()
 
   function relayToSubscriptors(subject: string, payload: Uint8Array) {
