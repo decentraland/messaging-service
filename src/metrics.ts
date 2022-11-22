@@ -30,7 +30,8 @@ export const metricDeclarations = {
   },
   dcl_messaging_ws_buffed_amount: {
     help: 'Buffered ammount for a ws',
-    type: IMetricsComponent.GaugeType
+    type: IMetricsComponent.GaugeType,
+    labelNames: ['alias']
   }
 }
 
