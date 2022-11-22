@@ -151,7 +151,9 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
             logger.error(err)
             try {
               ws.close()
-            } catch {}
+            } catch (err: any) {
+              logger.error(err)
+            }
           })
       },
       drain: (ws) => {

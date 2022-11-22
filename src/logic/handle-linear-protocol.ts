@@ -44,7 +44,7 @@ export async function handleSocketLinearProtocol(
       logger.error(`Authentication failed`, { message: result.message } as any)
       throw new Error('Authentication failed')
     }
-    logger.debug(`Authentication successful`, { address })
+    logger.debug(`Authentication successful`, { address, alias: socket.alias })
 
     socket.address = address
 
@@ -59,6 +59,8 @@ export async function handleSocketLinearProtocol(
       socket.close()
       return
     }
+
+    logger.debug(`Welcome sent`, { address, alias: socket.alias })
   } finally {
     // close the channel to remove the listener
     channel.close()

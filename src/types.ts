@@ -67,13 +67,9 @@ export type WsEvents = {
 
 export type WebSocketReader = Pick<uWS.WebSocket, 'end' | 'close'> & Emitter<WsEvents>
 
-export type WebSocket = Pick<uWS.WebSocket, 'subscribe' | 'unsubscribe'> &
+export type WebSocket = Pick<uWS.WebSocket, 'subscribe' | 'unsubscribe' | 'send' | 'publish'> &
   WebSocketReader & {
     stage: Stage
     alias: number
     address?: string
-
-    // NOTE(hugo): I prefer to override this ones to make isBinary not default
-    send: (data: Uint8Array, isBinary: boolean) => number
-    publish: (topic: string, data: Uint8Array, isBinary: boolean) => number
   }
