@@ -244,8 +244,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
         components.metrics.decrement('dcl_messaging_connections', {})
         const ws = _ws as any as WebSocket
         if (ws.address) {
-          // TODO: enable this back
-          // components.nats.publish(`peer.${ws.address}.disconnect`)
+          components.nats.publish(`peer.${ws.address}.disconnect`)
         }
       }
     })
