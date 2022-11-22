@@ -5,7 +5,6 @@ import { createFetchComponent } from './adapters/fetch'
 import { createMetricsComponent } from '@well-known-components/metrics'
 import { AppComponents } from './types'
 import { metricDeclarations } from './metrics'
-import { createWsConnectorComponent } from './adapters/ws-connector'
 import { observeBuildInfo } from './logic/build-info'
 import { createNatsComponent } from '@well-known-components/nats-component'
 
@@ -20,7 +19,6 @@ export async function initComponents(): Promise<AppComponents> {
   const logs = await createLogComponent({})
   const fetch = await createFetchComponent()
   const metrics = await createMetricsComponent(metricDeclarations, { config })
-  const wsConnector = createWsConnectorComponent({ logs })
   const ethereumProvider = new HTTPProvider(
     `https://rpc.decentraland.org/${encodeURIComponent(ethNetwork)}?project=mini-comms`,
     { fetch: fetch.fetch }
@@ -33,7 +31,6 @@ export async function initComponents(): Promise<AppComponents> {
     logs,
     fetch,
     metrics,
-    wsConnector,
     ethereumProvider,
     nats
   }

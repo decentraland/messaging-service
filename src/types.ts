@@ -7,7 +7,6 @@ import type {
   IMetricsComponent
 } from '@well-known-components/interfaces'
 import { metricDeclarations } from './metrics'
-import { IWebSocketConnectorComponent } from './adapters/ws-connector'
 import * as uWS from 'uWebSockets.js'
 import { Emitter } from 'mitt'
 import { INatsComponent } from '@well-known-components/nats-component/dist/types'
@@ -23,7 +22,6 @@ export type BaseComponents = {
   logs: ILoggerComponent
   fetch: IFetchComponent
   metrics: IMetricsComponent<keyof typeof metricDeclarations>
-  wsConnector: IWebSocketConnectorComponent
   ethereumProvider: HTTPProvider
   nats: INatsComponent
 }
