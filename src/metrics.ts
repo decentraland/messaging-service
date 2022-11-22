@@ -28,7 +28,7 @@ export const metricDeclarations = {
     help: 'Number of bytes from outgoing messages',
     type: IMetricsComponent.CounterType
   },
-  dcl_messaging_ws_buffed_amount: {
+  dcl_messaging_ws_buffered_amount: {
     help: 'Buffered ammount for a ws',
     type: IMetricsComponent.GaugeType,
     labelNames: ['alias']

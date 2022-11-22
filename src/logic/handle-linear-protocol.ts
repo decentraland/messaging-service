@@ -47,20 +47,6 @@ export async function handleSocketLinearProtocol(
     logger.debug(`Authentication successful`, { address, alias: socket.alias })
 
     socket.address = address
-
-    const welcomeMessage = craftMessage({
-      message: {
-        $case: 'welcome',
-        welcome: { alias: socket.alias }
-      }
-    })
-    if (socket.send(welcomeMessage, true) !== 1) {
-      logger.error('Closing connection: cannot send welcome')
-      socket.close()
-      return
-    }
-
-    logger.debug(`Welcome sent`, { address, alias: socket.alias })
   } finally {
     // close the channel to remove the listener
     channel.close()

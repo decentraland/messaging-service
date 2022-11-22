@@ -141,10 +141,24 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
       open: (_ws) => {
         components.metrics.increment('dcl_messaging_connections', {})
         const ws = _ws as any as WebSocket
-        ws.alias = connectionIndex++
         ws.stage = Stage.LINEAR
         handleSocketLinearProtocol(components, ws)
           .then(() => {
+            ws.alias = addressToAlias.get(ws.address!) || connectionIndex++
+            const welcomeMessage = craftMessage({
+              message: {
+                $case: 'welcome',
+                welcome: { alias: ws.alias }
+              }
+            })
+            if (ws.send(welcomeMessage, true) !== 1) {
+              logger.error('Closing connection: cannot send welcome')
+              ws.close()
+              return
+            }
+
+            logger.debug(`Welcome sent`, { address: ws.address!, alias: ws.alias })
+
             ws.stage = Stage.READY
             nats.publish(`peer.${ws.address!}.connect`)
             addressToAlias.set(ws.address!, ws.alias)
@@ -159,7 +173,7 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
           })
       },
       drain: (ws) => {
-        components.metrics.observe('dcl_messaging_ws_buffed_amount', { alias: ws.alias }, ws.getBufferedAmount())
+        components.metrics.observe('dcl_messaging_ws_buffered_amount', { alias: ws.alias }, ws.getBufferedAmount())
       },
       message: (_ws, data, isBinary) => {
         if (!isBinary) {
@@ -230,7 +244,8 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
         components.metrics.decrement('dcl_messaging_connections', {})
         const ws = _ws as any as WebSocket
         if (ws.address) {
-          components.nats.publish(`peer.${ws.address}.disconnect`)
+          // TODO: enable this back
+          // components.nats.publish(`peer.${ws.address}.disconnect`)
         }
       }
     })
