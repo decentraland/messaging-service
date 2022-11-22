@@ -26,7 +26,7 @@
     "protocVersion": "21.6"
   },
   "dependencies": {
-    "@dcl/crypto": "^3.2.1",
+    "@dcl/crypto": "^3.2.3",
     "@dcl/protocol": "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-3499518326.commit-232947c.tgz",
     "@well-known-components/env-config-provider": "^1.2.0",
     "@well-known-components/interfaces": "^1.1.2",
