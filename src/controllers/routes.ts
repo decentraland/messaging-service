@@ -96,12 +96,14 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
     }
 
     const { islandId, peerId } = ArchipelagoLeftIslandMessage.decode(message.data)
+    logger.debug(`peer left: ${islandId}:${peerId}`)
 
     const alias = addressToAlias.get(peerId)
     if (!alias) {
       return
     }
 
+    logger.debug(`peer left: ${islandId}:${alias}`)
     relayToSubscriptors(
       message.subject,
       LeftIslandMessage.encode({
@@ -228,7 +230,6 @@ export async function setupRouter({ app, components }: GlobalContext): Promise<v
         components.metrics.decrement('dcl_messaging_connections', {})
         const ws = _ws as any as WebSocket
         if (ws.address) {
-          addressToAlias.delete(ws.address)
           components.nats.publish(`peer.${ws.address}.disconnect`)
         }
       }
