@@ -29,7 +29,7 @@
     "@dcl/crypto": "^3.2.1",
     "@dcl/protocol": "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-3499518326.commit-232947c.tgz",
     "@well-known-components/env-config-provider": "^1.2.0",
-    "@well-known-components/interfaces": "^1.1.2",
+    "@well-known-components/interfaces": "^1.2.0",
     "@well-known-components/logger": "^3.0.0",
     "@well-known-components/metrics": "^2.0.0",
     "@well-known-components/nats-component": "^2.0.1-20220829190747.commit-5071389",
